@@ -42,6 +42,7 @@ export const InvestChart: FC<IProps> = memo(
 
     const rightData =
       locale === "ar" ? data.sort((a: any, b: any) => b.year - a.year) : data;
+
     const shiftedMinValue = Math.round(
       Math.min(
         ...rightData.map(
@@ -189,10 +190,9 @@ export const InvestChart: FC<IProps> = memo(
                 tickLine={false}
                 orientation={orientation}
                 interval={0}
-                domain={[shiftedMinValue,'auto']}
+                domain={[0, "dataMax + 2500"]}
                 allowDataOverflow={true}
                 hide
-
               />
               <Tooltip
                 cursor={{ fill: isMob ? "none" : "url(#g1)" }}
