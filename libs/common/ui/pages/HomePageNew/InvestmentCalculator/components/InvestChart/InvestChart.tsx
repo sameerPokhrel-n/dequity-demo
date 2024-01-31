@@ -12,6 +12,7 @@ import {
 import { CustomTooltip } from "./CustomTooltip";
 import styles from "./InvestChart.module.scss";
 import { useRouter } from "next/router";
+import { AxisDomain } from "recharts/types/util/types";
 
 export interface IInvestChart {
   investment: number;
@@ -28,6 +29,11 @@ interface IProps {
   viewWidth: number;
 }
 
+interface IStackedBarValues {
+  year: number;
+  barValue: number;
+}
+
 // eslint-disable-next-line react/display-name
 export const InvestChart: FC<IProps> = memo(
   ({ data, totalLabel, setIsActive, setYear, viewWidth }) => {
@@ -40,17 +46,54 @@ export const InvestChart: FC<IProps> = memo(
 
     const [tempYear, setTempYear] = useState<number>(0);
 
-    const rightData =
-      locale === "ar" ? data.sort((a: any, b: any) => b.year - a.year) : data;
+    const getStackedBarValues = ({ year, barValue }: IStackedBarValues) => {
+      let value;
+      switch (year) {
+        case 2025:
+          value = barValue * 4.5;
+          break;
+        case 2026:
+          value = barValue * 4;
+          break;
+        case 2027:
+          value = barValue * 4;
+          break;
+        case 2028:
+          value = barValue * 4;
+          break;
+        case 2029:
+          value = barValue * 4;
+          break;
 
-    const shiftedMinValue = Math.round(
-      Math.min(
-        ...rightData.map(
-          (el) =>
-            Number(el.investment) + Number(el.appreciation) + Number(el.rental)
-        )
-      ) * 0.85
-    );
+        default:
+          break;
+      }
+      return value;
+    };
+
+    const rightData =
+      locale === "ar"
+        ? data.sort((a: any, b: any) => b.year - a.year)
+        : data.map((el) => ({
+            ...el,
+            rentalAsLabel: getStackedBarValues({
+              year: el.year as number,
+              barValue: el.rental,
+            }),
+            appreciationAsLabel: getStackedBarValues({
+              year: el.year as number,
+              barValue: el.appreciation,
+            }),
+          }));
+
+    // const shiftedMinValue = Math.round(
+    //   Math.min(
+    //     ...rightData.map(
+    //       (el) =>
+    //         Number(el.investment) + Number(el.appreciation) + Number(el.rental)
+    //     )
+    //   ) * 0.85
+    // );
 
     const wrapperRef = useRef<any>(null);
 
@@ -130,6 +173,31 @@ export const InvestChart: FC<IProps> = memo(
     const isMob = width != null && width < 475;
     const isTabletOrMob = width != null && width < 991;
 
+    const calculateDomain = () => {
+      let domain: Array<string | number> = [];
+      if (rightData[0].investment <= 500) {
+        domain = [0, "dataMax + 100"];
+      } else if (
+        rightData[0].investment > 500 &&
+        rightData[0].investment <= 2000
+      ) {
+        domain = [0, "dataMax + 200"];
+      } else if (
+        rightData[0].investment > 2000 &&
+        rightData[0].investment <= 10000
+      ) {
+        domain = [0, "dataMax + 500"];
+      } else if (
+        rightData[0].investment > 10000 &&
+        rightData[0].investment <= 50000
+      ) {
+        domain = [0, "dataMax + 800"];
+      } else {
+        domain = [0, "dataMax + 1200"];
+      }
+      return domain;
+    };
+
     return (
       <div className={styles.chart__wrapper} ref={wrapperRef}>
         {data && data.length > 0 && (
@@ -147,6 +215,7 @@ export const InvestChart: FC<IProps> = memo(
               className={styles.chart_styles}
               onMouseMove={handleHeight}
               onMouseLeave={() => setYear(0)}
+              barSize={76}
             >
               <defs>
                 <linearGradient id="g1" x1=".5" x2=".5" y2="1">
@@ -173,7 +242,6 @@ export const InvestChart: FC<IProps> = memo(
               />
               <XAxis
                 dataKey="year"
-                axisLine={false}
                 tickLine={false}
                 height={24}
                 tick={{ dy: 6 }}
@@ -181,18 +249,19 @@ export const InvestChart: FC<IProps> = memo(
                   fontSize: "100%",
                 }}
               />
-
               <YAxis
+                type="number"
                 style={{
                   fontSize: "100%",
                 }}
                 axisLine={false}
-                tickLine={false}
+                tickLine={true}
                 orientation={orientation}
                 interval={0}
-                domain={[0, "dataMax + 2500"]}
+                domain={calculateDomain() as AxisDomain}
                 allowDataOverflow={true}
                 hide
+                stroke="none"
               />
               <Tooltip
                 cursor={{ fill: isMob ? "none" : "url(#g1)" }}
@@ -225,28 +294,20 @@ export const InvestChart: FC<IProps> = memo(
                 }
                 // isAnimationActive={false}
               />
-
               <Bar
                 dataKey="investment"
                 stackId="a"
                 fill="url(#lg500)"
                 radius={[0, 0, 4, 4]}
-                barSize={76}
               />
 
-              <Bar
-                dataKey="rental"
-                stackId="a"
-                fill="url(#lg300)"
-                barSize={76}
-              />
+              <Bar dataKey="rentalAsLabel" stackId="a" fill="url(#lg300)" />
 
               <Bar
-                dataKey="appreciation"
+                dataKey="appreciationAsLabel"
                 stackId="a"
                 fill="url(#lg50)"
                 radius={[4, 4, 0, 0]}
-                barSize={76}
               />
             </BarChart>
           </ResponsiveContainer>

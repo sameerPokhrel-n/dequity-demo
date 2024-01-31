@@ -51,17 +51,29 @@ export const CustomTooltip: FC<any> = ({
   if (isOutsideClicked && active && isTabletOrMob) {
     activeLocal = false;
   }
+
   const router = useRouter();
   if (activeLocal !== null && activeLocal && payload && payload.length) {
-    const total = payload[0].value + payload[1].value + payload[2].value;
+    const total =
+      payload[0].value +
+      payload[1].payload.appreciation +
+      payload[2].payload.rental;
     return (
       <div
         className={styles.toolTip}
         key={"payloadKey"}
         id="investment-tooltip"
       >
-        <Item locale={router.locale} style={500} value={payload[2].value} />
-        <Item locale={router.locale} style={300} value={payload[1].value} />
+        <Item
+          locale={router.locale}
+          style={500}
+          value={payload[2].payload.rental}
+        />
+        <Item
+          locale={router.locale}
+          style={300}
+          value={payload[1].payload.appreciation}
+        />
         <Item locale={router.locale} style={50} value={payload[0].value} />
         <Item locale={router.locale} total value={total} />
       </div>
